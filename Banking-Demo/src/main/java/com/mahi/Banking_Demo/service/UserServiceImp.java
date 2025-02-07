@@ -1,9 +1,6 @@
 package com.mahi.Banking_Demo.service;
 
-import com.mahi.Banking_Demo.dto.AccountInfo;
-import com.mahi.Banking_Demo.dto.BankResponse;
-import com.mahi.Banking_Demo.dto.EmailDetails;
-import com.mahi.Banking_Demo.dto.UserRequest;
+import com.mahi.Banking_Demo.dto.*;
 import com.mahi.Banking_Demo.entity.Users;
 import com.mahi.Banking_Demo.repository.UserRepository;
 import com.mahi.Banking_Demo.utils.AccountUtils;
@@ -69,5 +66,44 @@ public class UserServiceImp implements UserService{
                         .accountName(savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName())
                         .build())
                 .build();
+    }
+
+    @Override
+    public BankResponse balanceEnquiry(EnquiryRequest enquiryRequest) {
+        //First lets check if we have the requested accountNumber
+
+        boolean isAccountExist = userRepository.existsByAccountNumber(enquiryRequest.getAccountNumber());
+        if(!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+
+        }
+        Users foundUser = userRepository.findByAccountNumber(enquiryRequest.getAccountNumber());
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_FOUND)
+                .responseMessage(AccountUtils.ACCOUNT_FOUND_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(foundUser.getAccountBalance())
+                        .accountNumber(foundUser.getAccountNumber())
+                        .accountName(foundUser.getFirstName()+" "+foundUser.getLastName()+" "+foundUser.getOtherName())
+                        .build())
+                .build();
+    }
+
+    @Override
+    public String nameEnquiry(EnquiryRequest enquiryRequest) {
+        boolean isAccountExist = userRepository.existsByAccountNumber(enquiryRequest.getAccountNumber());
+        if(!isAccountExist){
+            return AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE;
+
+        }
+
+        Users foundUser = userRepository.findByAccountNumber(enquiryRequest.getAccountNumber());
+        return foundUser.getFirstName()+" "+foundUser.getLastName()+" "+foundUser.getOtherName();
+
+
     }
 }

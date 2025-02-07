@@ -10,6 +10,12 @@ public class AccountUtils {
     public static final String ACCOUNT_CREATION_CODE ="002";
     public static final String ACCOUNT_CREATION_MESSAGE = "ACCOUNT CREATED SUCCESSFULLY";
 
+    public static final String ACCOUNT_NOT_EXIST ="003";
+    public static final String ACCOUNT_NOT_EXIST_MESSAGE = "Account with provided details doesn't exist";
+
+    public static final String ACCOUNT_FOUND ="004";
+    public static final String ACCOUNT_FOUND_MESSAGE = "The account is present for the provided account number";
+
         public static String generateAccountNumber(){
         /* Here are we are trying to create random account number while creating an new user */
         /* Its of pattern Year+  9 random digits     */
