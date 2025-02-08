@@ -106,4 +106,74 @@ public class UserServiceImp implements UserService{
 
 
     }
+
+    @Override
+    public BankResponse creditDetails(CreditDebitRequest creditDebitRequest) {
+        //Check for account availability
+        boolean isAccountExist = userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber());
+        if(!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+
+        }
+
+        Users userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
+        userRepository.save(userToCredit);
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_CREDIT_SUCCESS)
+                .responseMessage(AccountUtils.ACCOUNT_CREDIT_SUCCESS_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(userToCredit.getAccountBalance())
+                        .accountNumber(userToCredit.getAccountNumber())
+                        .accountName(userToCredit.getFirstName()+" "+userToCredit.getLastName()+" "+userToCredit.getOtherName())
+                        .build())
+                .build();
+    }
+
+    @Override
+    public BankResponse debitAccount(CreditDebitRequest creditDebitRequest) {
+        /* In this we need to check if we have the account and
+        if the account as  more money than the withdraw amount
+         */
+
+        boolean isAccountExist = userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber());
+        if(!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+
+        }
+
+        Users userToDebit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        if(userToDebit.getAccountBalance().compareTo(creditDebitRequest.getAmount())<0){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_LOW_BALANCE)
+                    .responseMessage(AccountUtils.ACCOUNT_LOW_BALANCE_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+
+        }
+
+        else{
+            userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
+            userRepository.save(userToDebit);
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_DEBIT_SUCCESS)
+                    .responseMessage(AccountUtils.ACCOUNT_DEBIT_SUCCESS_MESSAGE)
+                    .accountInfo(AccountInfo.builder()
+                            .accountBalance(userToDebit.getAccountBalance())
+                            .accountNumber(userToDebit.getAccountNumber())
+                            .accountName(userToDebit.getFirstName()+" "+userToDebit.getLastName()+" "+userToDebit.getOtherName())
+                            .build())
+                    .build();
+        }
+
+       // return null;
+    }
 }

@@ -16,6 +16,14 @@ public class AccountUtils {
     public static final String ACCOUNT_FOUND ="004";
     public static final String ACCOUNT_FOUND_MESSAGE = "The account is present for the provided account number";
 
+    public static final String ACCOUNT_CREDIT_SUCCESS ="005";
+    public static final String ACCOUNT_CREDIT_SUCCESS_MESSAGE = "The account has been credit successfully";
+
+    public static final String ACCOUNT_LOW_BALANCE ="006";
+    public static final String ACCOUNT_LOW_BALANCE_MESSAGE = "The balance in the account is less than the withdraw amount";
+
+    public static final String ACCOUNT_DEBIT_SUCCESS ="007";
+    public static final String ACCOUNT_DEBIT_SUCCESS_MESSAGE = "The amount has been debit successfully";
         public static String generateAccountNumber(){
         /* Here are we are trying to create random account number while creating an new user */
         /* Its of pattern Year+  9 random digits     */

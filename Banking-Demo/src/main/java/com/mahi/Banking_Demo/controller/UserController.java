@@ -1,6 +1,7 @@
 package com.mahi.Banking_Demo.controller;
 
 import com.mahi.Banking_Demo.dto.BankResponse;
+import com.mahi.Banking_Demo.dto.CreditDebitRequest;
 import com.mahi.Banking_Demo.dto.EnquiryRequest;
 import com.mahi.Banking_Demo.dto.UserRequest;
 import com.mahi.Banking_Demo.entity.Users;
@@ -30,6 +31,16 @@ public class UserController {
     @GetMapping("nameEnquiry")
     public String nameEnquiry(@RequestBody EnquiryRequest enquiryRequest){
         return userService.nameEnquiry(enquiryRequest);
+    }
+
+    @PostMapping("/credit")
+    public BankResponse creditAccount(@RequestBody CreditDebitRequest creditDebitRequest){
+        return userService.creditDetails(creditDebitRequest);
+    }
+
+    @PostMapping("/debit")
+    public BankResponse debitAccount(@RequestBody CreditDebitRequest creditDebitRequest){
+        return userService.debitAccount(creditDebitRequest);
     }
 
 
