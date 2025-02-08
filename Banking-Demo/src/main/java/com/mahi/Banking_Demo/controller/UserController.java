@@ -1,9 +1,6 @@
 package com.mahi.Banking_Demo.controller;
 
-import com.mahi.Banking_Demo.dto.BankResponse;
-import com.mahi.Banking_Demo.dto.CreditDebitRequest;
-import com.mahi.Banking_Demo.dto.EnquiryRequest;
-import com.mahi.Banking_Demo.dto.UserRequest;
+import com.mahi.Banking_Demo.dto.*;
 import com.mahi.Banking_Demo.entity.Users;
 import com.mahi.Banking_Demo.service.UserService;
 import org.apache.catalina.User;
@@ -41,6 +38,12 @@ public class UserController {
     @PostMapping("/debit")
     public BankResponse debitAccount(@RequestBody CreditDebitRequest creditDebitRequest){
         return userService.debitAccount(creditDebitRequest);
+    }
+
+    @PostMapping("/transfer")
+    public BankResponse transferToAccount(@RequestBody TransferRequest transferRequest){
+
+        return userService.transferDetails(transferRequest);
     }
 
 

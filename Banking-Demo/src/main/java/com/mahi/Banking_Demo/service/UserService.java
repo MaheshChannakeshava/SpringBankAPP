@@ -1,9 +1,6 @@
 package com.mahi.Banking_Demo.service;
 
-import com.mahi.Banking_Demo.dto.BankResponse;
-import com.mahi.Banking_Demo.dto.CreditDebitRequest;
-import com.mahi.Banking_Demo.dto.EnquiryRequest;
-import com.mahi.Banking_Demo.dto.UserRequest;
+import com.mahi.Banking_Demo.dto.*;
 
 public interface UserService {
 
@@ -13,4 +10,5 @@ public interface UserService {
 
     BankResponse creditDetails(CreditDebitRequest creditDebitRequest);
     BankResponse debitAccount(CreditDebitRequest creditDebitRequest);
+    BankResponse transferDetails(TransferRequest transferRequest);
 }
