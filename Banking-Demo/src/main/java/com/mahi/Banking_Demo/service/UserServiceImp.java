@@ -1,12 +1,19 @@
 package com.mahi.Banking_Demo.service;
 
+import com.mahi.Banking_Demo.config.JwtTokenProvider;
 import com.mahi.Banking_Demo.dto.*;
+import com.mahi.Banking_Demo.entity.Role;
 import com.mahi.Banking_Demo.entity.Users;
 import com.mahi.Banking_Demo.repository.UserRepository;
 import com.mahi.Banking_Demo.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.awt.image.BandCombineOp;
 import java.math.BigDecimal;
 
 @Service
@@ -17,6 +24,18 @@ public class UserServiceImp implements UserService{
 
     @Autowired
     EmailService emailService;
+
+    @Autowired
+    TransactionService transactionService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -41,9 +60,11 @@ public class UserServiceImp implements UserService{
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status("ACTIVE")
+                .role(Role.valueOf("ROLE_ADMIN"))
                 .build();
 
         Users savedUser = userRepository.save(newUser);
@@ -66,6 +87,28 @@ public class UserServiceImp implements UserService{
                         .accountName(savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName())
                         .build())
                 .build();
+    }
+
+    @Override
+    public BankResponse login(LoginDto loginDto){
+        Authentication authentication = null;
+        authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+
+        EmailDetails loginAlerts= EmailDetails.builder()
+                .subject("You are logged in!!")
+                .recipient(loginDto.getEmail())
+                .mailBody("You have logged in to your account. If you have npt initiated it please contact the bank")
+                .build();
+        emailService.sendEmailALerts(loginAlerts);
+
+        return BankResponse.builder()
+                .responseCode("Login Success")
+                .responseMessage(jwtTokenProvider.generateToken(authentication))
+               // .accountInfo()
+                .build();
+
     }
 
     @Override
@@ -123,6 +166,14 @@ public class UserServiceImp implements UserService{
         Users userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
+        TransactionRequest transactionRequest = TransactionRequest.builder()
+                .accountNumber(userToCredit.getAccountNumber())
+                .amount(creditDebitRequest.getAmount())
+                .transactionType("CREDIT")
+                .build();
+
+        transactionService.saveTransaction(transactionRequest);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREDIT_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_CREDIT_SUCCESS_MESSAGE)
@@ -163,6 +214,14 @@ public class UserServiceImp implements UserService{
         else{
             userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
             userRepository.save(userToDebit);
+            TransactionRequest transactionRequestDebit = TransactionRequest.builder()
+                    .accountNumber(userToDebit.getAccountNumber())
+                    .amount(creditDebitRequest.getAmount())
+                    .transactionType("DEBIT")
+                    .build();
+
+            transactionService.saveTransaction(transactionRequestDebit);
+
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_DEBIT_SUCCESS)
                     .responseMessage(AccountUtils.ACCOUNT_DEBIT_SUCCESS_MESSAGE)
@@ -218,6 +277,13 @@ public class UserServiceImp implements UserService{
                     .build();
 
             emailService.sendEmailALerts(debitAlert);
+            TransactionRequest transactionRequestDebitTransfer = TransactionRequest.builder()
+                    .accountNumber(sourceAccount.getAccountNumber())
+                    .amount(BigDecimal.valueOf(transferRequest.getAmount()))
+                    .transactionType("DEBIT")
+                    .build();
+
+            transactionService.saveTransaction(transactionRequestDebitTransfer);
 
             Users destinationAccount = userRepository.findByAccountNumber(transferRequest.getDestinationAccountNumber());
             destinationAccount.setAccountBalance(destinationAccount.getAccountBalance().add(BigDecimal.valueOf(transferRequest.getAmount())));
@@ -230,6 +296,15 @@ public class UserServiceImp implements UserService{
                     .build();
 
             emailService.sendEmailALerts(creditAlert);
+            TransactionRequest transactionRequestCreditTransfer = TransactionRequest.builder()
+                    .accountNumber(destinationAccount.getAccountNumber())
+                    .amount(BigDecimal.valueOf(transferRequest.getAmount()))
+                    .transactionType("CREDIT")
+                    .build();
+
+            transactionService.saveTransaction(transactionRequestCreditTransfer);
+
+
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_DEBIT_SUCCESS)
                     .responseMessage(AccountUtils.ACCOUNT_DEBIT_SUCCESS_MESSAGE)
